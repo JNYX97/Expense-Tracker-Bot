@@ -19,15 +19,15 @@ from charts import generate_alerts_chart
 
 HELP_TEXT = """
 💸 *Personal Expense Tracker*
+Tracks spendature against short term goals (across the month) and mid term goals (across the year)
 
 *Monthly categories:* short term, monthly subscription, tax, stipend
 *Annual categories:* insurance, investment, annual membership, project
 
 *Logging expenses:*
-• `/add 12.50 food Chicken rice` — logs to current month (May 2026)
-• `/add 500 shopping Clothes --month June 2026` — logs to June 2026
+• `/add 12.50 short term Chicken rice --recurring 30` — logs to current month (May 2026)
+• `/add 500 short term shopping Clothes --month June 2026` — logs to June 2026
 • `/add 2000 project Malaysia Trip --year 2027` — logs to annual 2027
-• `/add 50 transport MRT --recurring 30` — recurring expense
 • `/add 800 project --sub Malaysia Holiday --year 2027` — logs to sub-project, annual 2027
 • `/project add Malaysia Holiday --year 2027` — creates new sub-project, annual 2027
 
@@ -41,7 +41,7 @@ HELP_TEXT = """
 *Viewing:*
 • `/list` — expenses this month
 • `/list June 2026` — expenses for a specific month
-• `/list annual` — expenses this year
+• `/list annual` — mid-term expenses this year
 • `/list annual 2027` — expenses for a specific year
 • `/summary` — spending vs budget this month
 • `/summary June 2026` — specific month summary
