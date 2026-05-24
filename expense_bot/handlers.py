@@ -20,7 +20,7 @@ from charts import generate_alerts_chart
 HELP_TEXT = """
 💸 *Personal Expense Tracker*
 
-*Monthly categories:* Short-term, monthly subscription, tax, stipend
+*Monthly categories:* short term, monthly subscription, tax, stipend
 *Annual categories:* insurance, investment, annual membership, project
 
 *Logging expenses:*
