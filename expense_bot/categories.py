@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────
 
 MONTHLY_CATEGORIES = {
-    "Short-term":           "🛍️",
+    "Short term":           "🛍️",
     "monthly subscription": "📦",
     "tax":                  "🧾",
     "stipend":              "💸",
