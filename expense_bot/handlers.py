@@ -554,3 +554,87 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def _progress_bar(pct: float, length: int = 10) -> str:
     filled = min(int(pct / 100 * length), length)
     return "█" * filled + "░" * (length - filled)
+
+# ── /remove ───────────────────────────────────────────────────────────────────
+# Uses a simple conversation state stored in context.user_data
+
+REMOVE_AWAITING = "remove_awaiting_selection"
+
+
+async def remove_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /remove — shows last 10 entries and asks user to pick one to delete.
+    """
+    user_id = update.effective_user.id
+    entries = get_recent_entries(user_id, limit=10)
+
+    if not entries:
+        await update.message.reply_text("No expenses found to remove.")
+        return
+
+    lines = ["🗑️ *Recent entries — reply with the number to remove:*\n"]
+    for i, row in enumerate(entries, start=1):
+        source, entry_id, amount, category, note, date, p_month, p_year = row
+        if source == "project":
+            label = f"📁 `${amount:.2f}` — project [{category}] | {note or '—'} | 📅 {p_year}"
+        else:
+            period = f"📅 {p_year}" if p_month is None else f"🗓 {p_year}-{p_month:02d}"
+            label  = f"{emoji_for(category)} `${amount:.2f}` — {category} | {note or '—'} | {period}"
+        lines.append(f"{i}. {label}")
+
+    lines.append("\n_Reply with a number to delete, or /cancel to abort._")
+
+    # Store entries in user_data for the next message
+    context.user_data[REMOVE_AWAITING] = entries
+    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+
+
+async def remove_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handles the user's numeric reply after /remove.
+    """
+    entries = context.user_data.get(REMOVE_AWAITING)
+    if not entries:
+        return  # not in a remove flow, ignore
+
+    text    = update.message.text.strip()
+    user_id = update.effective_user.id
+
+    # Allow /cancel mid-flow
+    if text.lower() in ("/cancel", "cancel"):
+        context.user_data.pop(REMOVE_AWAITING, None)
+        await update.message.reply_text("❌ Removal cancelled.")
+        return
+
+    try:
+        choice = int(text)
+    except ValueError:
+        await update.message.reply_text(
+            "Please reply with a *number* from the list, or /cancel to abort.",
+            parse_mode="Markdown"
+        )
+        return
+
+    if choice < 1 or choice > len(entries):
+        await update.message.reply_text(
+            f"Please enter a number between 1 and {len(entries)}, or /cancel to abort.",
+            parse_mode="Markdown"
+        )
+        return
+
+    row = entries[choice - 1]
+    source, entry_id, amount, category, note, date, p_month, p_year = row
+
+    if source == "project":
+        delete_project_expense(user_id, entry_id)
+        desc = f"📁 project [{category}] — `${amount:.2f}` | {note or '—'} | 📅 {p_year}"
+    else:
+        delete_expense(user_id, entry_id)
+        period = f"📅 {p_year}" if p_month is None else f"🗓 {p_year}-{p_month:02d}"
+        desc   = f"{emoji_for(category)} {category} — `${amount:.2f}` | {note or '—'} | {period}"
+
+    context.user_data.pop(REMOVE_AWAITING, None)
+    await update.message.reply_text(
+        f"✅ *Entry removed:*\n{desc}",
+        parse_mode="Markdown"
+    )
