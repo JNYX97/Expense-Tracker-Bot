@@ -6,7 +6,8 @@ from db import init_db
 from handlers import (
     start, help_command, add_expense, list_expenses,
     set_budget, show_summary, show_projection,
-    check_alerts, show_categories, cancel
+    check_alerts, show_categories, cancel,
+    remove_start, remove_confirm
 )
 from project_handlers import project_command
 
