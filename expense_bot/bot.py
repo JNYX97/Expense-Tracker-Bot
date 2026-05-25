@@ -1,6 +1,6 @@
 import os
 import logging
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
 from db import init_db
 from handlers import (
