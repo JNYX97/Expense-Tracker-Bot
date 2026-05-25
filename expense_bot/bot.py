@@ -36,6 +36,10 @@ def main():
     app.add_handler(CommandHandler("alerts",     check_alerts))
     app.add_handler(CommandHandler("categories", show_categories))
     app.add_handler(CommandHandler("project",    project_command))
+    app.add_handler(CommandHandler("remove",     remove_start))
+
+    # Catch numeric replies for the /remove flow (must be after all command handlers)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, remove_confirm))
 
     print("✅ Bot is running...")
     app.run_polling()
