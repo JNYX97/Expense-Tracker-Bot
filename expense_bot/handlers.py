@@ -9,7 +9,8 @@ from categories import (
 from db import (
     insert_expense, get_expenses_by_period, get_recurring_expenses,
     get_period_totals_by_category, set_budget_db, get_budgets,
-    insert_project_expense, get_project, get_project_totals, get_projects
+    insert_project_expense, get_project, get_project_totals, get_projects,
+    get_recent_entries, delete_expense, delete_project_expense
 )
 from parse_utils import parse_flags, parse_period_args, period_label, MONTH_NAMES
 from charts import generate_alerts_chart
