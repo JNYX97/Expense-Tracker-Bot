@@ -344,3 +344,69 @@ def delete_project(user_id, project_name, period_year):
                WHERE user_id = ? AND project_name = ? AND period_year = ?""",
             (user_id, project_name.strip(), period_year)
         )
+
+# ── Remove entries ─────────────────────────────────────────────────────────────
+
+def get_recent_entries(user_id, limit=10):
+    """
+    Returns the most recent expenses + project expenses merged and sorted by date.
+    Each row: (source, id, amount, category, note, date, period_month, period_year)
+    source is 'expense' or 'project'
+    """
+    with get_conn() as conn:
+        expenses = conn.execute(
+            """SELECT 'expense' as source, id, amount, category, note, date,
+                      period_month, period_year
+               FROM expenses
+               WHERE user_id = ?
+               ORDER BY id DESC LIMIT ?""",
+            (user_id, limit)
+        ).fetchall()
+
+        proj_expenses = conn.execute(
+            """SELECT 'project' as source, id, amount, project_name, note, date,
+                      NULL as period_month, period_year
+               FROM project_expenses
+               WHERE user_id = ?
+               ORDER BY id DESC LIMIT ?""",
+            (user_id, limit)
+        ).fetchall()
+
+    # Merge and sort by date descending, then take top `limit`
+    combined = list(expenses) + list(proj_expenses)
+    combined.sort(key=lambda r: (r[5], r[1]), reverse=True)
+    return combined[:limit]
+
+
+def delete_expense(user_id, expense_id):
+    with get_conn() as conn:
+        conn.execute(
+            "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user_id)
+        )
+
+def delete_project_expense(user_id, expense_id):
+    with get_conn() as conn:
+        # Get details before deleting so we can also remove from main expenses
+        row = conn.execute(
+            """SELECT project_name, period_year, amount, note
+               FROM project_expenses WHERE id = ? AND user_id = ?""",
+            (expense_id, user_id)
+        ).fetchone()
+        if row:
+            project_name, period_year, amount, note = row
+            conn.execute(
+                "DELETE FROM project_expenses WHERE id = ? AND user_id = ?",
+                (expense_id, user_id)
+            )
+            # Also remove the mirrored entry from main expenses table
+            conn.execute(
+                """DELETE FROM expenses
+                   WHERE user_id = ? AND category = 'project'
+                     AND category_type = 'annual'
+                     AND period_year = ?
+                     AND amount = ?
+                     AND note LIKE ?
+                   LIMIT 1""",
+                (user_id, period_year, amount, f"[{project_name}]%")
+            )
